@@ -1,0 +1,66 @@
+<template>
+
+  <form class="text-md-center">
+    <v-row align="center" class="text-md-center">
+    <v-col cols="4">
+
+    <v-text-field
+      v-model="email"
+      label="Email"
+      required
+      class="text-md-center"
+    ></v-text-field>
+
+    <v-text-field
+      v-model="password"
+      type="password"
+      label="password"
+      required
+    ></v-text-field>
+
+    <v-btn
+      class="mr-4"
+      dark
+      color="#085e05"
+      @click="login"
+    >
+    Login
+    </v-btn>
+    <v-btn @click="clear"
+    >
+      clear
+    </v-btn>
+    </v-col>
+    </v-row>
+
+  </form>
+</template>
+
+<script>
+import axios from "axios";
+import Vue from 'vue'
+export default {
+  name: 'LoginPage',
+
+  data() {
+    return {
+      valid: false, 
+      email: "",
+      password: ""
+    }
+  }, 
+  
+  methods: {
+    async login() {
+      var body = { email: this.email, password: this.password };
+      var result = await axios.post("http://localhost:8090/login", body);
+      if(result.data != -1) {
+        this.$userId = result.data;
+        console.log(this.$userId); 
+
+      } 
+      print(result);
+    }
+  }
+};
+</script>
