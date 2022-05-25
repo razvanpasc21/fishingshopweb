@@ -1,44 +1,56 @@
 <template>
-  <v-container class="grey lighten-5">
-    <v-row no-gutters>
-      <v-col md="10">
-        <h1>Welcome, {{ currentUser.firstName }} {{ currentUser.lastName }} !</h1>
-        <v-item-group active-class="primary">
-          <v-container>
-            <v-row>
-              <v-col v-for="product in products" :key="product.id" md="3">
-                <v-item text-center>
-                  <v-card class="d-flex flex-column produs" height="100%">
-                    <img v-bind:src="'' + product.image"/> 
-
-                    <v-card-title class = "title" text-center> {{ product.name }} </v-card-title>
-
-                    <v-card-subtitle>
-                      {{ product.description }}
-                    </v-card-subtitle>
-
-                    <v-card-subtitle class="pret">
-                      {{ product.price }} RON
-                    </v-card-subtitle>
-                    <v-spacer class="d-flex"></v-spacer>
-                    <v-card-actions>
-                      <v-btn
-                        color="#fc9d03"
-                        class="mt-auto"
-                        dark
-                        @click="addToCart(product)"
-                      >
-                        Add to cart
-                      </v-btn>
-                    </v-card-actions>
-                  </v-card>
-                </v-item>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-item-group>
-      </v-col>
-      <v-col md="2">
+  <v-row>
+    <v-col md="10">
+      <div>
+        <div id="main-content" class="container">
+          <div class="row">
+            <div class="col-md-6">
+              <form class="form-inline">
+                <div class="form-group">
+                  <label for="name">Type a message below</label>
+                  <input
+                    type="text"
+                    id="name"
+                    class="form-control mesaj"
+                    v-model="send_message"
+                    placeholder="Write your message here..."
+                    outlined
+                  />
+                </div>
+                <v-btn
+                  id="send"
+                  blue
+                  dark
+                  class="btn btn-default"
+                  type="submit"
+                  @click.prevent="send"
+                  >Send</v-btn
+                >
+              </form>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <table id="conversation" class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Chat Box</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="item in received_messages" :key="item">
+                    <td>
+                      {{ item }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </v-col>
+    <v-col md="2">
         <v-card height="750px">
           <v-navigation-drawer absolute permanent right>
             <template v-slot:prepend>
@@ -128,40 +140,36 @@
           </v-navigation-drawer>
         </v-card>
       </v-col>
-    </v-row>
-  </v-container>
+  </v-row>
 </template>
 
 <script>
+import * as SockJS from "sockjs-client";
+import Stomp from "webstomp-client";
 import axios from "axios";
-import { mdiCart } from "@mdi/js";
+import { mdiCart, mdiDotsGrid, mdiSelectGroup } from "@mdi/js";
 import { mdiStoreCheckOutline } from "@mdi/js";
 import { mdiClipboardTextClock } from "@mdi/js";
 import { mdiFaceAgent } from '@mdi/js';
-export default {
-  name: "ShopView",
 
-  data() {
+export default {
+  name: "SocketView",
+  data: function () {
     return {
-      items: [
+        items: [
         { title: "Shop", icon: mdiStoreCheckOutline },
         { title: "My Account", icon: "mdi-account" },
         { title: "My Cart", icon: mdiCart },
         { title: "Orders", icon: mdiClipboardTextClock },
         { title: "Chat", icon: mdiFaceAgent },
       ],
-      products: [],
+      received_messages: [],
+      send_message: null,
+      connected: false,
       currentUser: null,
     };
   },
-
   methods: {
-    async getProducts() {
-      await axios.get("http://localhost:8090/products").then((response) => {
-        console.log(response.data);
-        this.products = response.data;
-      });
-    },
     async getUser() {
       await axios
         .get(`http://localhost:8090/users/${localStorage.getItem("userId")}`)
@@ -171,17 +179,31 @@ export default {
           this.userBalance = this.currentUser.balance.toFixed(2);
         });
     },
-    async addToCart(product) {
-      try {
-        var body = {
-          userId: localStorage.getItem("userId"),
-          productId: product.id,
-        };
-        var result = await axios.post(`http://localhost:8090/cart/`, body);
-        alert("Product added in cart!");
-      } catch (_) {
-        alert("Can't add to cart! Please try again!");
+    send() {
+      console.log("Send message:" + this.send_message);
+      if (this.stompClient && this.stompClient.connected) {
+        const msg = { message: this.send_message, userFullName: this.currentUser.firstName + ' ' + this.currentUser.lastName };
+        this.stompClient.send("/app/hello", JSON.stringify(msg), {});
       }
+    },
+    connect() {
+      this.socket = new SockJS("http://localhost:8090/fishingShop-WebSocket");
+      this.stompClient = Stomp.over(this.socket);
+      this.stompClient.connect(
+        {},
+        (frame) => {
+          this.connected = true;
+          console.log(frame);
+          this.stompClient.subscribe("/topic/greetings", (msg) => {
+            console.log(msg);
+            this.received_messages.push(JSON.parse(msg.body).content);
+          });
+        },
+        (error) => {
+          console.log(error);
+          this.connected = false;
+        }
+      );
     },
     logOut() {
       localStorage.setItem("userId", -1);
@@ -189,36 +211,18 @@ export default {
       console.log(result.data); 
     },
   },
-
+  mounted() {
+    this.connect();
+  },
   created() {
-    this.getProducts();
     this.getUser();
   },
 };
 </script>
 
-<style scoped>
-  .logOutButton {
-    position: absolute;
-    bottom: 0px;
-    width: 130px;
-    height: 130px;
-    background: #0088cc;
-    margin: auto;
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-  }
-  h1 {
-    font-size: 20px;
-    margin-left: -1200px;
-  }
-  .pret {
-    font-size: 25px;
-  }
-  .title {
-    text-align: center;
-
-  }
+<style>
+.mesaj {
+    height: 50px;
+    width: 200px;
+}
 </style>

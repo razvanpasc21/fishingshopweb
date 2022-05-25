@@ -1,42 +1,15 @@
 <template>
   <v-container class="grey lighten-5">
     <v-row no-gutters>
-      <v-col md="10">
-        <h1>Welcome, {{ currentUser.firstName }} {{ currentUser.lastName }} !</h1>
-        <v-item-group active-class="primary">
-          <v-container>
-            <v-row>
-              <v-col v-for="product in products" :key="product.id" md="3">
-                <v-item text-center>
-                  <v-card class="d-flex flex-column produs" height="100%">
-                    <img v-bind:src="'' + product.image"/> 
-
-                    <v-card-title class = "title" text-center> {{ product.name }} </v-card-title>
-
-                    <v-card-subtitle>
-                      {{ product.description }}
-                    </v-card-subtitle>
-
-                    <v-card-subtitle class="pret">
-                      {{ product.price }} RON
-                    </v-card-subtitle>
-                    <v-spacer class="d-flex"></v-spacer>
-                    <v-card-actions>
-                      <v-btn
-                        color="#fc9d03"
-                        class="mt-auto"
-                        dark
-                        @click="addToCart(product)"
-                      >
-                        Add to cart
-                      </v-btn>
-                    </v-card-actions>
-                  </v-card>
-                </v-item>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-item-group>
+      <v-col md="10" class="stanga">
+        <v-app>
+          <v-data-table
+            :headers="headers"
+            :items="orders"
+            class="elevation-1"
+          >
+          </v-data-table>
+        </v-app>
       </v-col>
       <v-col md="2">
         <v-card height="750px">
@@ -54,9 +27,7 @@
                     >{{ currentUser.firstName }}
                     {{ currentUser.lastName }}</v-list-item-title
                   >
-                  <v-list-item-subtitle
-                    >Balance: {{ userBalance }}$</v-list-item-subtitle
-                  >
+                  <v-list-item-subtitle>Balance: {{userBalance}}$</v-list-item-subtitle>
                 </v-list-item-content>
               </v-list-item>
             </template>
@@ -138,8 +109,9 @@ import { mdiCart } from "@mdi/js";
 import { mdiStoreCheckOutline } from "@mdi/js";
 import { mdiClipboardTextClock } from "@mdi/js";
 import { mdiFaceAgent } from '@mdi/js';
+
 export default {
-  name: "ShopView",
+  name: "OrdersView",
 
   data() {
     return {
@@ -150,18 +122,17 @@ export default {
         { title: "Orders", icon: mdiClipboardTextClock },
         { title: "Chat", icon: mdiFaceAgent },
       ],
-      products: [],
+      headers: [
+        { text: "Order Id", value: "orderId" },
+        { text: "Price", value: "price" },
+        { text: "", value: "actions" },
+      ],
+      orders: [],
       currentUser: null,
     };
   },
 
   methods: {
-    async getProducts() {
-      await axios.get("http://localhost:8090/products").then((response) => {
-        console.log(response.data);
-        this.products = response.data;
-      });
-    },
     async getUser() {
       await axios
         .get(`http://localhost:8090/users/${localStorage.getItem("userId")}`)
@@ -171,16 +142,16 @@ export default {
           this.userBalance = this.currentUser.balance.toFixed(2);
         });
     },
-    async addToCart(product) {
+    async getOrders() {
       try {
-        var body = {
-          userId: localStorage.getItem("userId"),
-          productId: product.id,
-        };
-        var result = await axios.post(`http://localhost:8090/cart/`, body);
-        alert("Product added in cart!");
+        await axios
+          .get(`http://localhost:8090/orders/${localStorage.getItem("userId")}`)
+          .then((response) => {
+            console.log(response.data);
+            this.orders = response.data;
+          });
       } catch (_) {
-        alert("Can't add to cart! Please try again!");
+        alert("Can't retrieve any orders! Please try again!");
       }
     },
     logOut() {
@@ -189,36 +160,26 @@ export default {
       console.log(result.data); 
     },
   },
-
   created() {
-    this.getProducts();
     this.getUser();
+    this.getOrders();
   },
 };
-</script>
+</script> 
 
-<style scoped>
-  .logOutButton {
-    position: absolute;
-    bottom: 0px;
-    width: 130px;
-    height: 130px;
-    background: #0088cc;
-    margin: auto;
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-  }
-  h1 {
-    font-size: 20px;
-    margin-left: -1200px;
-  }
-  .pret {
-    font-size: 25px;
-  }
-  .title {
-    text-align: center;
+<style>
+h1 {
+  margin-top: 10px;
+  margin-bottom: 50px;
+}
 
-  }
+form {
+  margin-top: 50px;
+  margin-left: 600px;
+}
+
+.buton {
+  margin: auto;
+  margin-top: 50px;
+}
 </style>

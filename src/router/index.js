@@ -7,6 +7,10 @@ import AdminView from '../views/AdminView.vue'
 import UsersView from '../views/UsersView.vue'
 import ProductsView from '../views/ProductsView.vue'
 import ShopView from '../views/ShopView.vue'
+import AccountView from '../views/AccountView.vue'
+import CartView from '../views/CartView.vue'
+import OrdersView from '../views/OrdersView.vue'
+import SocketView from '../views/SocketView.vue'
 
 Vue.use(VueRouter)
 
@@ -60,6 +64,38 @@ const routes = [
     path: '/shop',
     name: 'shop',
     component: ShopView
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+  },
+  {
+    path: '/account',
+    name: 'account',
+    component: AccountView
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+  },
+  {
+    path: '/cart',
+    name: 'cart',
+    component: CartView
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+  },
+  {
+    path: '/orders',
+    name: 'orders',
+    component: OrdersView
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+  },
+  {
+    path: '/chat',
+    name: 'chat',
+    component: SocketView
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.

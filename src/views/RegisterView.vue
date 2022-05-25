@@ -80,7 +80,8 @@ export default {
         var body = { firstName: this.firstName, lastName: this.lastName, email: this.email, password: this.password, gender: this.gender };
         try {
         var result = await axios.post("http://localhost:8090/users", body);
-        print(result);
+        alert("Account created succesfully!");
+        this.$router.push("/");
         } catch(_) {
         alert("Can't register user! Please try again!");
       }
